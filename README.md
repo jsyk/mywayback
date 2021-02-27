@@ -10,18 +10,20 @@ Install Dependencies
 
 Running
 -------
-python mywayback.py <target-directory>
+python mywayback.py *target-directory*
 
 
 Target Directory Content
 ------------------------
-The <target-directory> specified on the command line MUST contain a subdirectory named 'config/'.
+The *target-directory* specified on the command line MUST contain a subdirectory named 'config/'.
 Files in the 'config/' subdirectory are read in alphabetical order as the configuration files. File extensions are irrelevant.
-Content of a configuration file must be:
+The content of a configuration file must look like this:
 
 	# comment
 	+/some/directory/to/backup
 	-/some/other/directory/to/skip
+
+(Of course you can put any number of +, -, and # lines...)
 
 The tool creates in the target directory two new subdirs:
 
