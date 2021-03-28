@@ -4,6 +4,7 @@ from scanner import FoundFile, Scanner
 from checker import Checker, split_hexdigest_to_dirpath, path_sanitize
 import hashlib
 import os
+import time
 from os import path
 from shutil import copy2
 
@@ -28,9 +29,23 @@ class Taker:
             hdir = split_hexdigest_to_dirpath(ff.digest)
             fullhdir = path.join(self.root, 'db', 'by-hash', hdir)
             bodyfile = path.join(fullhdir, 'body')
-            if not path.isdir(fullhdir):
+
+            if path.exists(bodyfile):
+                # check existing bodyfile if suits.
+                # read stat() of the common body file
+                bodystat = os.stat(bodyfile)
+                if bodystat.st_nlink > 1000:
+                    # ntfs supports max 1024 hard-links to a file!
+                    # rename the current body file to retire it
+                    oldbodyfile = bodyfile + "_renamed_" + time.strftime("%Y-%m-%d--%H-%M")
+                    os.rename(bodyfile, oldbodyfile)
+                    # now bodyfile does not exist -> will be created next!
+
+            if not path.exists(bodyfile):
                 # a new file
-                os.makedirs(fullhdir)
+                if not path.isdir(fullhdir):
+                    os.makedirs(fullhdir)
+                # create the body file anew
                 try:
                     # shutil.copy2() should copy metadata: permission bits, last access time, last modification time, and flags
                     copy2(ff.fullname(), bodyfile, follow_symlinks=False)
@@ -48,6 +63,7 @@ class Taker:
             # print('bodyfile=', bodyfile)
             # print('Viewdir=', viewdir, ', viewfname=', viewfname)
             os.makedirs(viewdir, exist_ok=True)
+
             try:
                 os.link(bodyfile, viewfname)
 
